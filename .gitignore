@@ -1,0 +1,4 @@
+node_modules/
+*.enc
+share-*.txt
+.env

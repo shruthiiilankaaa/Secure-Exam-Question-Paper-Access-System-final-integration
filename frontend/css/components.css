@@ -1,0 +1,606 @@
+/* =====================================================================
+   Components: Login Portal, Stat Cards, Enterprise Forms & Audit Table
+   Theme: Minimal Enterprise Light UI (Matching Login Page: #F6F8FB)
+   Style: 16px Radius White Cards, 14px Input Radius, Soft Shadows, Clean Badges
+   ===================================================================== */
+
+/* -------------------------------------------------------------
+   1. LOGIN PORTAL VIEW (Clean Light Theme #F6F8FB)
+   ------------------------------------------------------------- */
+.login-view-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  background-color: var(--bg-page);
+}
+
+.login-portal-layout {
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 4.5rem;
+  align-items: center;
+}
+
+/* Left Panel */
+.login-hero-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.login-graphic-container {
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 0.5rem;
+}
+
+.login-graphic-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.login-portal-title {
+  font-size: var(--font-size-h1);
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+.login-portal-subtitle {
+  font-size: var(--font-size-card-title);
+  font-weight: 600;
+  color: var(--blue-primary);
+  letter-spacing: -0.01em;
+}
+
+.login-portal-desc {
+  font-size: var(--font-size-body);
+  color: #4b5563;
+  line-height: 1.65;
+  margin-top: 0.25rem;
+}
+
+/* Right Panel: White Login Card */
+.login-card-right {
+  display: flex;
+  justify-content: center;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-card);
+  padding: 2.75rem 2.25rem;
+  box-shadow: var(--shadow-card);
+}
+
+.login-card-header {
+  margin-bottom: 2rem;
+}
+
+.login-card-title {
+  font-size: var(--font-size-h2);
+  font-weight: 600;
+  color: #111827;
+  letter-spacing: -0.015em;
+}
+
+.login-card-desc {
+  font-size: 14px;
+  color: #64748b;
+  margin-top: 0.35rem;
+}
+
+/* Login Form Controls */
+.login-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.45rem;
+  display: block;
+}
+
+.login-input {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: var(--radius-input);
+  padding: 0.75rem 1rem;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: #111827;
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.login-input:focus {
+  border-color: var(--blue-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.login-input::placeholder {
+  color: #9ca3af;
+}
+
+.login-btn {
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.85rem;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+}
+
+.login-authorized-notice {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  margin-top: 1.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* Responsive Login */
+@media (max-width: 960px) {
+  .login-portal-layout {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+  .login-card {
+    max-width: 100%;
+  }
+  .login-hero-left {
+    text-align: center;
+  }
+  .login-graphic-container {
+    margin: 0 auto;
+  }
+}
+
+/* -------------------------------------------------------------
+   2. STAT CARDS (Compact White Cards | Icon, Large Number, Label)
+   ------------------------------------------------------------- */
+.stat-card {
+  background: #ffffff;
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-card);
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-card);
+  transition: border-color var(--transition-fast);
+}
+
+.stat-card:hover {
+  border-color: var(--border-hover);
+}
+
+.stat-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: #f8fafc;
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  color: #4b5563;
+}
+
+.stat-val {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #111827;
+  letter-spacing: -0.02em;
+}
+
+.stat-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  margin-top: 0.35rem;
+}
+
+/* -------------------------------------------------------------
+   3. STATUS BADGES (Clean Badges, No Glow)
+   ------------------------------------------------------------- */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.65rem;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.status-badge.pending {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fef3c7;
+}
+
+.status-badge.approved {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #dbeafe;
+}
+
+.status-badge.rejected {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fee2e2;
+}
+
+.status-badge.time-locked {
+  background: #f3e8ff;
+  color: #7e22ce;
+  border: 1px solid #e9d5ff;
+}
+
+.status-badge.ready {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #dcfce7;
+}
+
+/* Action Tags in Audit Ledger */
+.action-tag {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-sm);
+  background: #f8fafc;
+  border: 1px solid var(--border-subtle);
+  color: #4b5563;
+}
+
+.action-tag.upload { color: #1d4ed8; border-color: #dbeafe; background: #eff6ff; }
+.action-tag.unlock { color: #b45309; border-color: #fef3c7; background: #fffbeb; }
+.action-tag.approve { color: #15803d; border-color: #dcfce7; background: #f0fdf4; }
+.action-tag.decrypt { color: #7e22ce; border-color: #e9d5ff; background: #f3e8ff; }
+.action-tag.tamper { color: #b91c1c; border-color: #fee2e2; background: #fef2f2; font-weight: 600; }
+
+/* -------------------------------------------------------------
+   4. UPLOAD PAGE & ENTERPRISE FORM CONTROLS (14px Radius Inputs)
+   ------------------------------------------------------------- */
+.form-group {
+  margin-bottom: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.form-input, .form-select, .form-textarea {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: var(--radius-input);
+  padding: 0.8rem 1.1rem;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-body);
+  color: #111827;
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--blue-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-input::placeholder, .form-textarea::placeholder {
+  color: #9ca3af;
+}
+
+/* Drag & Drop PDF Area: White Area, Dashed Gray Border */
+.dropzone {
+  border: 2px dashed #d1d5db;
+  border-radius: var(--radius-card);
+  padding: 3rem 2rem;
+  text-align: center;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.dropzone:hover, .dropzone.dragover {
+  border-color: var(--blue-primary);
+  background: #f8fafc;
+}
+
+.dropzone-upload-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #eff6ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+  color: var(--blue-primary);
+}
+
+/* -------------------------------------------------------------
+   5. APPROVAL STATUS (White Enterprise Paper Cards)
+   ------------------------------------------------------------- */
+.paper-card {
+  background: #ffffff;
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-card);
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  box-shadow: var(--shadow-card);
+  transition: border-color var(--transition-fast);
+}
+
+.paper-card:hover {
+  border-color: var(--border-hover);
+}
+
+.paper-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.paper-code {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: #1d4ed8;
+}
+
+.paper-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.paper-title {
+  font-size: var(--font-size-card-title);
+  font-weight: 600;
+  color: #111827;
+  line-height: 1.35;
+}
+
+.paper-meta {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.paper-date {
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.threshold-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.progress-bar-bg {
+  width: 100%;
+  height: 5px;
+  background: #f1f5f9;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--blue-primary);
+  transition: width 0.3s ease;
+}
+
+.paper-footer {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-subtle);
+  flex-wrap: wrap;
+}
+
+/* -------------------------------------------------------------
+   6. UNLOCK REQUEST (Timeline with Thin Gray Connectors)
+   ------------------------------------------------------------- */
+.chain-node {
+  position: relative;
+  padding-left: 1.75rem;
+  padding-bottom: 1.75rem;
+}
+
+.chain-node::before {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 12px;
+  bottom: 0;
+  width: 1px;
+  background: #e5e7eb;
+}
+
+.chain-node:last-child::before {
+  display: none;
+}
+
+.chain-dot {
+  position: absolute;
+  left: 0;
+  top: 5px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid var(--blue-primary);
+}
+
+.chain-dot.active {
+  background: var(--blue-primary);
+  border-color: var(--blue-primary);
+}
+
+.chain-dot.completed {
+  background: var(--emerald);
+  border-color: var(--emerald);
+}
+
+/* -------------------------------------------------------------
+   7. AUDIT VERIFICATION (Enterprise Info Banner & White Table)
+   ------------------------------------------------------------- */
+/* Green info banner when valid */
+.verification-banner.valid {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: var(--radius-card);
+  padding: 1.5rem 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  margin-bottom: 2.25rem;
+}
+
+.verification-banner.valid .banner-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #166534;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.verification-banner.valid .banner-desc {
+  font-size: 14px;
+  color: #15803d;
+  margin-top: 0.25rem;
+}
+
+/* White alert card with red left border when tampering detected */
+.verification-banner.tampered {
+  background: #ffffff;
+  border: 1px solid var(--border-card);
+  border-left: 4px solid var(--rose);
+  border-radius: var(--radius-card);
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 2.25rem;
+  box-shadow: var(--shadow-card);
+}
+
+.alert-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.alert-indicator.success { background: var(--emerald); }
+.alert-indicator.danger { background: var(--rose); }
+
+.corrupted-alert-panel {
+  background: #fef2f2;
+  border: 1px solid #fee2e2;
+  border-radius: var(--radius-md);
+  padding: 1.25rem 1.5rem;
+  margin-top: 1rem;
+}
+
+.corrupted-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  font-size: 13px;
+  margin-top: 0.75rem;
+}
+
+/* White Enterprise Table with Sticky Header & Zebra Rows */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  max-height: 600px;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--border-card);
+  background: #ffffff;
+  box-shadow: var(--shadow-card);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: var(--font-size-body);
+}
+
+.data-table th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #f8fafc;
+  padding: 14px 18px;
+  font-weight: 600;
+  color: #4b5563;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.data-table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: #111827;
+  vertical-align: middle;
+}
+
+/* Zebra Rows */
+.data-table tbody tr:nth-child(even) {
+  background: #f9fafb;
+}
+
+.data-table tbody tr:nth-child(odd) {
+  background: #ffffff;
+}
+
+/* Hover Highlight */
+.data-table tbody tr:hover {
+  background: #f3f4f6 !important;
+}
+
+.data-table tbody tr.corrupted-row {
+  background: #fef2f2 !important;
+  border-left: 3px solid var(--rose);
+}

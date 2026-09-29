@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Exam Question Paper Access System</title>
+    <meta name="description" content="University Examination Directorate — Cryptographically Secured Question Paper Access and Tamper-Evident Audit System.">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+</head>
+<body class="login-mode">
+    <div id="app">
+        <!-- Main Institutional Navigation Header (Stretched & Spacious Modern Bar) -->
+        <header class="app-header" id="app-header" style="display:none">
+            <div class="header-container">
+                <!-- Left: University Branding with Shield Crest -->
+                <a href="#" class="brand-badge" data-act="switchView" data-arg="view-dashboard">
+                    <div class="brand-crest">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            <rect x="9" y="11" width="6" height="4" rx="1"></rect>
+                            <path d="M10 11V9a2 2 0 1 1 4 0v2"></path>
+                        </svg>
+                    </div>
+                    <div class="brand-text-col">
+                        <div class="brand-title">Secure Exam System</div>
+                        <div class="brand-subtitle">Cryptographic Question Paper Access Portal</div>
+                    </div>
+                </a>
+
+                <!-- Center: Navbar Tabs (Spacious Segmented Navigation) -->
+                <nav class="nav-tabs" id="main-nav-tabs" style="display:none">
+                    <button class="nav-tab-btn active" id="tab-dashboard" data-view="view-dashboard">
+                        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                        <span>Dashboard</span>
+                    </button>
+                    <button class="nav-tab-btn" id="tab-upload" data-view="view-upload">
+                        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <span>Upload Paper</span>
+                    </button>
+                    <button class="nav-tab-btn" id="tab-approvals" data-view="view-approvals">
+                        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 11l3 3L22 4"></path>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                        </svg>
+                        <span>Approval Status</span>
+                    </button>
+                    <button class="nav-tab-btn" id="tab-unlock" data-view="view-unlock">
+                        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+                        </svg>
+                        <span>Unlock Request</span>
+                    </button>
+                    <button class="nav-tab-btn" id="tab-audit" data-view="view-audit">
+                        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        <span>Audit Verification</span>
+                    </button>
+                    <button class="nav-tab-btn" id="tab-users" data-view="view-users">
+                        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                        <span>Users</span>
+                    </button>
+                </nav>
+
+                <!-- Right: User Session Menu (Spacious Avatar + Role + Sign Out) -->
+                <div class="user-menu" id="user-menu" style="display:none">
+                    <div class="user-pill">
+                        <div class="user-avatar-badge" id="user-avatar-initial">U</div>
+                        <div class="user-pill-text">
+                            <span id="user-display-name" class="user-display-name">User</span>
+                            <span id="user-display-role" class="role-tag">ROLE</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-logout" id="logout-btn" title="Sign out of portal">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        <span>Sign Out</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Body Views -->
+        <main style="flex:1">
+            <!-- ========================================================= -->
+            <!-- 1. LOGIN PAGE VIEW (Clean Refined Light Theme #F6F8FB) -->
+            <!-- ========================================================= -->
+            <section class="page-view active-view" id="view-login">
+                <div class="login-view-wrapper">
+                    <div class="login-portal-layout">
+                        <!-- Left Panel: Minimal Security Illustration & Description -->
+                        <div class="login-hero-left">
+                            <div class="login-graphic-container">
+                                <svg class="login-graphic-svg" viewBox="0 0 400 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect width="400" height="220" rx="16" fill="#EFF6FF"/>
+                                    <circle cx="200" cy="110" r="76" stroke="#BFDBFE" stroke-width="1.5" stroke-dasharray="4 4"/>
+                                    <circle cx="200" cy="110" r="48" fill="#DBEAFE"/>
+                                    <!-- Minimalist Security Vault Shield Motif -->
+                                    <path d="M200 75C188 75 178 84.5 178 96.5V106H173C168.5 106 165 109.5 165 114V140C165 144.5 168.5 148 173 148H227C231.5 148 235 144.5 235 140V114C235 109.5 231.5 106 227 106H222V96.5C222 84.5 212 75 200 75ZM187 96.5C187 89.5 192.5 84 200 84C207.5 84 213 89.5 213 96.5V106H187V96.5ZM200 121C202.5 121 204.5 123 204.5 125.5C204.5 127.3 203.4 128.8 201.8 129.5V135H198.2V129.5C196.6 128.8 195.5 127.3 195.5 125.5C195.5 123 197.5 121 200 121Z" fill="#3B82F6"/>
+                                    <!-- Key Share Consensus Nodes -->
+                                    <rect x="44" y="60" width="76" height="30" rx="6" fill="#FFFFFF" stroke="#93C5FD" stroke-width="1.5"/>
+                                    <text x="82" y="79" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" font-weight="600" fill="#1E40AF">SHARE 1</text>
+                                    <line x1="120" y1="75" x2="160" y2="98" stroke="#93C5FD" stroke-width="1.5" stroke-dasharray="3 3"/>
+
+                                    <rect x="44" y="130" width="76" height="30" rx="6" fill="#FFFFFF" stroke="#93C5FD" stroke-width="1.5"/>
+                                    <text x="82" y="149" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" font-weight="600" fill="#1E40AF">SHARE 2</text>
+                                    <line x1="120" y1="145" x2="160" y2="122" stroke="#93C5FD" stroke-width="1.5" stroke-dasharray="3 3"/>
+
+                                    <rect x="280" y="60" width="76" height="30" rx="6" fill="#FFFFFF" stroke="#93C5FD" stroke-width="1.5"/>
+                                    <text x="318" y="79" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" font-weight="600" fill="#1E40AF">SHARE 3</text>
+                                    <line x1="280" y1="75" x2="240" y2="98" stroke="#93C5FD" stroke-width="1.5" stroke-dasharray="3 3"/>
+
+                                    <rect x="280" y="130" width="76" height="30" rx="6" fill="#FFFFFF" stroke="#93C5FD" stroke-width="1.5"/>
+                                    <text x="318" y="149" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" font-weight="600" fill="#1E40AF">SHA-256</text>
+                                    <line x1="280" y1="145" x2="240" y2="122" stroke="#93C5FD" stroke-width="1.5" stroke-dasharray="3 3"/>
+                                </svg>
+                            </div>
+                            <h1 class="login-portal-title">Secure Examination Portal</h1>
+                            <div class="login-portal-subtitle">Cryptographic Access Control System</div>
+                            <p class="login-portal-desc">
+                                University Examination Directorate portal for secure handling of confidential examination papers using AES-256 encryption, Shamir Secret Sharing, role-based authorization, and tamper-evident audit verification.
+                            </p>
+                        </div>
+
+                        <!-- Right Panel: White Login Card (Manual Entry Only) -->
+                        <div class="login-card-right">
+                            <div class="login-card">
+                                <div class="login-card-header">
+                                    <h2 class="login-card-title">Sign In</h2>
+                                    <p class="login-card-desc">Enter your academic credentials to authenticate.</p>
+                                </div>
+
+                                <form id="login-form">
+                                    <div class="form-group" style="margin-bottom:1.25rem">
+                                        <label class="login-label" for="login-email">Academic Email</label>
+                                        <input type="email" id="login-email" class="login-input" placeholder="e.g. name@university.edu" required autocomplete="username">
+                                    </div>
+
+                                    <div class="form-group" style="margin-bottom:1.5rem">
+                                        <label class="login-label" for="login-password">Password</label>
+                                        <input type="password" id="login-password" class="login-input" placeholder="Enter password" required autocomplete="current-password">
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary login-btn" id="login-submit-btn">
+                                        Sign In
+                                    </button>
+                                </form>
+                                <div style="text-align:center; margin-top:1rem; font-size:14px">
+                                    <a href="#" id="show-signup-btn" style="color:var(--blue-primary); font-weight:600; text-decoration:none">Create an account</a>
+                                </div>
+
+                                <form id="signup-form" style="display:none">
+                                    <div class="form-group" style="margin-bottom:1rem">
+                                        <label class="login-label" for="signup-name">Full Name</label>
+                                        <input type="text" id="signup-name" class="login-input" placeholder="e.g. Dr. Jane Doe" required>
+                                    </div>
+                                    <div class="form-group" style="margin-bottom:1rem">
+                                        <label class="login-label" for="signup-email">Academic Email</label>
+                                        <input type="email" id="signup-email" class="login-input" placeholder="name@iiitkottayam.ac.in" required autocomplete="username">
+                                    </div>
+                                    <div class="form-group" style="margin-bottom:1rem">
+                                        <label class="login-label" for="signup-password">Password</label>
+                                        <input type="password" id="signup-password" class="login-input" placeholder="10+ chars, upper, lower, number, symbol" minlength="10" required autocomplete="new-password">
+                                    </div>
+                                    <p style="color:var(--text-secondary); font-size:13px; margin-bottom:1.5rem">
+                                        Only @iiitkottayam.ac.in emails can register. An admin will assign your role
+                                        (setter, approver or invigilator) before you can sign in.
+                                    </p>
+                                    <button type="submit" class="btn btn-primary login-btn" id="signup-submit-btn">Create Account</button>
+                                    <div style="text-align:center; margin-top:1rem; font-size:14px">
+                                        <a href="#" id="show-login-btn" style="color:var(--blue-primary); font-weight:600; text-decoration:none">Back to sign in</a>
+                                    </div>
+                                </form>
+
+
+                                <div class="login-authorized-notice">
+                                    Authorized personnel only
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Dashboard & Workflow Views Container -->
+            <div class="container">
+                <!-- ========================================================= -->
+                <!-- 2. DASHBOARD VIEW (Enterprise Dark Dashboard #0F172A) -->
+                <!-- ========================================================= -->
+                <section class="page-view" id="view-dashboard">
+                    <!-- Expansive Stretched Dashboard Hero Banner Container -->
+                    <div id="dash-role-banner" style="width: 100%"></div>
+
+                    <!-- 4 Clean Enterprise Stat Cards (Radius 18px, Small Icon, Large Number, Label Underneath) -->
+                    <div class="grid grid-cols-4 lg:grid-cols-4 gap-6" style="margin-bottom: 2.5rem">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                </svg>
+                            </div>
+                            <div class="stat-val" id="stat-total-papers">0</div>
+                            <div class="stat-label">Total Papers</div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                            </div>
+                            <div class="stat-val" id="stat-pending">0</div>
+                            <div class="stat-label">Pending Approvals</div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+                                </svg>
+                            </div>
+                            <div class="stat-val" id="stat-ready">0</div>
+                            <div class="stat-label">Ready For Exam</div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                </svg>
+                            </div>
+                            <div class="stat-val" id="stat-audit-status" style="font-size:22px">VERIFYING...</div>
+                            <div class="stat-label">Audit Chain Integrity</div>
+                        </div>
+                    </div>
+
+                    <!-- Role Action Container -->
+                    <div id="role-action-panel" style="margin-bottom: 2.5rem"></div>
+
+                    <!-- Cryptographic Architecture Summary -->
+                    <div class="glass-card">
+                        <h3 style="color:var(--text-primary); font-size:var(--font-size-card-title); font-weight:600; margin-bottom:1.5rem">
+                            Cryptographic Access Governance Architecture
+                        </h3>
+                        <div class="grid grid-cols-3 gap-6" style="font-size:var(--font-size-body); color:var(--text-secondary)">
+                            <div style="background:#f8fafc; padding:1.5rem; border-radius:var(--radius-md); border:1px solid var(--border-subtle)">
+                                <strong style="color:var(--blue-primary); display:block; margin-bottom:0.5rem; font-size:16px">1. AES-256-GCM Encryption</strong>
+                                Exam question papers are authenticated and encrypted at rest with AES-256-GCM, preventing unauthorized plaintext disclosure before examination release.
+                            </div>
+                            <div style="background:#f8fafc; padding:1.5rem; border-radius:var(--radius-md); border:1px solid var(--border-subtle)">
+                                <strong style="color:#b45309; display:block; margin-bottom:0.5rem; font-size:16px">2. Shamir's Secret Sharing (k-of-n)</strong>
+                                The master AES key is mathematically partitioned across designated approvers. Decryption is impossible without consensus meeting the threshold k.
+                            </div>
+                            <div style="background:#f8fafc; padding:1.5rem; border-radius:var(--radius-md); border:1px solid var(--border-subtle)">
+                                <strong style="color:#15803d; display:block; margin-bottom:0.5rem; font-size:16px">3. Tamper-Evident Audit Ledger</strong>
+                                All access actions are permanently committed to an immutable SHA-256 hash chain, guaranteeing that any modification is detected.
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ========================================================= -->
+                <!-- 3. QUESTION PAPER UPLOAD PAGE (Setter / Admin) -->
+                <!-- ========================================================= -->
+                <section class="page-view" id="view-upload">
+                    <div class="view-header">
+                        <div class="view-header-title-group">
+                            <div class="view-header-badge">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17 8 12 3 7 8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="view-breadcrumb">Cryptographic Deposit &bull; Confidentiality Vault</div>
+                                <h1 class="view-title">Upload Examination Question Paper</h1>
+                                <p class="view-subtitle">Encrypt confidential examination papers with AES-256-GCM and generate distributed Shamir secret key shares.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="max-width: 900px; margin: 0 auto">
+                        <div class="glass-card">
+                            <form id="upload-paper-form">
+                                <div class="form-group">
+                                    <label class="form-label" for="upload-title">Paper Title *</label>
+                                    <input type="text" id="upload-title" class="form-input" placeholder="e.g. CS804 Distributed Computing - End Semester" required>
+                                </div>
+
+                                <!-- Exam Time Lock Window -->
+                                <div style="background:#f8fafc; border:1px solid var(--border-subtle); border-radius:var(--radius-md); padding:1.5rem; margin-bottom:1.5rem">
+                                    <h4 style="color:var(--text-primary); font-size:16px; font-weight:600; margin-bottom:1.25rem">
+                                        Authorized Examination Time-Lock Window
+                                    </h4>
+                                    <div class="grid grid-cols-3 gap-6">
+                                        <div class="form-group" style="margin-bottom:0">
+                                            <label class="form-label" for="upload-date" style="font-size:14px">Examination Date *</label>
+                                            <input type="date" id="upload-date" class="form-input" required>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:0">
+                                            <label class="form-label" for="upload-start-time" style="font-size:14px">Window Start Time *</label>
+                                            <input type="time" id="upload-start-time" class="form-input" value="09:00" required>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:0">
+                                            <label class="form-label" for="upload-end-time" style="font-size:14px">Window End Time *</label>
+                                            <input type="time" id="upload-end-time" class="form-input" value="12:00" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Approvers + Shamir threshold -->
+                                <div style="background:#f8fafc; border:1px solid var(--border-subtle); border-radius:var(--radius-md); padding:1.5rem; margin-bottom:1.5rem">
+                                    <h4 style="color:var(--text-primary); font-size:16px; font-weight:600; margin-bottom:1rem">
+                                        Approvers &amp; Shamir Threshold (k-of-n)
+                                    </h4>
+                                    <div class="form-group">
+                                        <label class="form-label">Designated Approvers * <span style="font-weight:400; color:var(--text-secondary)">(select at least 2; one key share is issued to each)</span></label>
+                                        <div id="upload-approvers" style="display:flex; flex-direction:column; gap:0.5rem">
+                                            <span style="color:var(--text-muted); font-size:14px">Loading approvers...</span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group" style="margin-bottom:0">
+                                        <label class="form-label" for="upload-k" style="font-size:14px">Threshold Approvals Required (k)</label>
+                                        <input type="number" id="upload-k" class="form-input" value="2" min="2">
+                                        <small style="color:var(--text-secondary); font-size:13px; margin-top:4px">Between 2 and the number of selected approvers (n). Minimum approvals needed to rebuild the AES key.</small>
+                                    </div>
+                                </div>
+
+                                <!-- Drag & Drop PDF Dropzone (White Area, Dashed Gray Border, Small Upload Illustration) -->
+                                <div class="form-group">
+                                    <label class="form-label">Question Paper PDF Document</label>
+                                    <div class="dropzone" id="file-dropzone">
+                                        <div class="dropzone-upload-icon">
+                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                <polyline points="17 8 12 3 7 8"></polyline>
+                                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                                            </svg>
+                                        </div>
+                                        <div style="font-weight:600; color:var(--text-primary); font-size:16px">Select or Drag & Drop Question Paper PDF</div>
+                                        <div style="font-size:14px; color:var(--text-secondary)">PDF files up to 25MB (Encrypted automatically before storage)</div>
+                                        <div id="selected-file-name" style="color:var(--blue-primary); font-weight:600; font-size:14px; margin-top:0.25rem"></div>
+                                    </div>
+                                    <input type="file" id="paper-file-input" accept="application/pdf" style="display:none">
+                                </div>
+
+                                <button type="submit" class="btn btn-primary" id="upload-submit-btn" style="width:100%; padding:0.85rem">
+                                    Encrypt & Upload Question Paper
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ========================================================= -->
+                <!-- 4. UNLOCK REQUEST PAGE (Invigilator / Approver) -->
+                <!-- ========================================================= -->
+                <section class="page-view" id="view-unlock">
+                    <div class="view-header">
+                        <div class="view-header-title-group">
+                            <div class="view-header-badge amber">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="view-breadcrumb">Invigilation Operations &bull; Time-Lock Authorization</div>
+                                <h1 class="view-title">Unlock &amp; Decrypt Examination Paper</h1>
+                                <p class="view-subtitle">Decrypt a paper once enough approvers have signed off and the exam window is open.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-6" style="margin-bottom:2.5rem">
+                        <!-- Request Submission Form -->
+                        <div class="glass-card">
+                            <h3 style="color:var(--text-primary); font-size:var(--font-size-card-title); font-weight:600; margin-bottom:1.5rem">
+                                Unlock Paper
+                            </h3>
+                            <form id="unlock-request-form">
+                                <div class="form-group">
+                                    <label class="form-label" for="unlock-paper-select">Select Examination Paper *</label>
+                                    <select id="unlock-paper-select" class="form-select" required>
+                                        <option value="">-- Choose Examination Paper --</option>
+                                    </select>
+                                </div>
+
+                                <div style="background:#f8fafc; border:1px solid var(--border-subtle); border-radius:var(--radius-md); padding:1rem; margin-bottom:1.5rem; font-size:13px; color:var(--text-secondary)">
+                                    <strong style="color:#b45309">Time-Lock Protocol Notice:</strong> Even after threshold approvers register their cryptographic shares, the paper remains strictly time-locked until the scheduled examination window begins.
+                                </div>
+
+                                <button type="submit" class="btn btn-emerald" style="width:100%">
+                                    Unlock &amp; Download Paper
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Protocol Stages (Timeline with Thin Connecting Lines) -->
+                        <div class="glass-card flex flex-col justify-between">
+                            <div>
+                                <h3 style="color:var(--text-primary); font-size:var(--font-size-card-title); font-weight:600; margin-bottom:1.5rem">
+                                    Examination Access Authorization Protocol
+                                </h3>
+                                <div class="chain-node">
+                                    <div class="chain-dot active"></div>
+                                    <strong style="color:var(--text-primary); font-size:15px">Stage 1: Paper Encrypted &amp; Shares Issued</strong>
+                                    <p style="font-size:14px; color:var(--text-secondary); margin-top:0.25rem">The setter uploads the paper; it is encrypted with AES-256-GCM and one Shamir key share is issued per approver.</p>
+                                </div>
+                                <div class="chain-node">
+                                    <div class="chain-dot active"></div>
+                                    <strong style="color:var(--text-primary); font-size:15px">Stage 2: Threshold Approvals Registered (k-of-n)</strong>
+                                    <p style="font-size:14px; color:var(--text-secondary); margin-top:0.25rem">Assigned authorities (e.g. HOD and Controller) inspect the paper and sign their respective Shamir key shares.</p>
+                                </div>
+                                <div class="chain-node">
+                                    <div class="chain-dot"></div>
+                                    <strong style="color:var(--text-primary); font-size:15px">Stage 3: Time-Lock Window Verification</strong>
+                                    <p style="font-size:14px; color:var(--text-secondary); margin-top:0.25rem">The cryptographic core verifies that current timestamp falls strictly within the authorized exam window.</p>
+                                </div>
+                                <div class="chain-node">
+                                    <div class="chain-dot completed"></div>
+                                    <strong style="color:var(--emerald); font-size:15px">Stage 4: AES Key Reconstructed & Decrypted</strong>
+                                    <p style="font-size:14px; color:var(--text-secondary); margin-top:0.25rem">Shamir shares are combined in GF(256), the AES-256 key is reconstructed, and the PDF is securely served.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Active Unlock Requests Table -->
+                    <div class="glass-card">
+                        <h3 style="color:var(--text-primary); font-size:var(--font-size-card-title); font-weight:600; margin-bottom:1.5rem">
+                            Papers &amp; Unlock Status
+                        </h3>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Exam Paper</th>
+                                        <th>Exam Window</th>
+                                        <th>Approvals</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="unlock-requests-table-body">
+                                    <tr><td colspan="5" style="text-align:center; padding:2rem; color:var(--text-muted)">Loading papers...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ========================================================= -->
+                <!-- 5. APPROVAL STATUS PAGE (All Roles) -->
+                <!-- ========================================================= -->
+                <section class="page-view" id="view-approvals">
+                    <div class="view-header">
+                        <div class="view-header-title-group">
+                            <div class="view-header-badge indigo">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M9 11l3 3L22 4"></path>
+                                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="view-breadcrumb">Consensus Governance &bull; Authority Key Shares</div>
+                                <h1 class="view-title">Examination Paper Approval Status Board</h1>
+                                <p class="view-subtitle">Track consensus progress across all scheduled papers: Pending, Time Locked, Ready for Exam, Unlocked and Expired.</p>
+                            </div>
+                        </div>
+                        <div>
+                            <button class="dash-refresh-btn" data-act="loadApprovalsData">
+                                <svg class="refresh-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="23 4 23 10 17 10"></polyline>
+                                    <polyline points="1 20 1 14 7 14"></polyline>
+                                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                                </svg>
+                                <span>Refresh Board</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filter Tabs -->
+                    <div style="display:flex; gap:0.5rem; margin-bottom:2rem; flex-wrap:wrap">
+                        <button class="btn btn-secondary btn-sm filter-tab-btn active" data-filter="ALL">All Papers</button>
+                        <button class="btn btn-secondary btn-sm filter-tab-btn" data-filter="PENDING">Pending Approvals</button>
+                        <button class="btn btn-secondary btn-sm filter-tab-btn" data-filter="TIME_LOCKED">Time Locked</button>
+                        <button class="btn btn-secondary btn-sm filter-tab-btn" data-filter="READY_FOR_EXAM">Ready For Exam</button>
+                        <button class="btn btn-secondary btn-sm filter-tab-btn" data-filter="UNLOCKED">Unlocked</button>
+                        <button class="btn btn-secondary btn-sm filter-tab-btn" data-filter="EXPIRED">Expired</button>
+                    </div>
+
+                    <!-- Grid of dynamic paper status cards -->
+                    <div class="grid grid-cols-3 lg:grid-cols-3 gap-6" id="approval-cards-grid">
+                        <!-- Populated dynamically via App.renderApprovalCards() -->
+                    </div>
+                </section>
+
+                <!-- ========================================================= -->
+                <!-- 6. AUDIT HISTORY & VERIFICATION CENTER (PART 3, 4, 5) -->
+                <!-- ========================================================= -->
+                <section class="page-view" id="view-audit">
+                    <div class="view-header">
+                        <div class="view-header-title-group">
+                            <div class="view-header-badge emerald">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                    <polyline points="9 12 11 14 15 10"></polyline>
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="view-breadcrumb">Security Audit &bull; Mathematical Cryptographic Ledger</div>
+                                <h1 class="view-title">Tamper-Evident Audit Ledger & Verification</h1>
+                                <p class="view-subtitle">SHA-256 hash chain over each entry (action, actor, paper, details, timestamp) linked to the previous entry's hash</p>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center">
+                            <button class="btn btn-primary btn-sm" id="run-verify-btn">
+                                Verify Hash Chain Now
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Verification Status Banner (PART 4) -->
+                    <div id="verification-banner" class="verification-banner valid">
+                        <!-- Populated dynamically via App.renderVerificationBanner() -->
+                    </div>
+
+                    <!-- Filter and Search Bar (PART 5) -->
+                    <div class="glass-card" style="margin-bottom:2rem; padding:1.25rem 1.5rem">
+                        <div style="display:flex; gap:1.25rem; align-items:center; flex-wrap:wrap">
+                            <div style="flex:1; min-width:260px">
+                                <input type="text" id="audit-search-input" class="form-input" style="width:100%" placeholder="Search audit ledger by user, action, paper ID, or hash...">
+                            </div>
+                            <div style="min-width:220px">
+                                <select id="audit-action-filter" class="form-select" style="width:100%">
+                                    <option value="ALL">All Actions</option>
+                                    <option value="PAPER_UPLOADED">PAPER_UPLOADED</option>
+                                    <option value="APPROVAL_SUBMITTED">APPROVAL_SUBMITTED</option>
+                                    <option value="APPROVAL_DENIED">APPROVAL_DENIED</option>
+                                    <option value="UNLOCK_SUCCESS">UNLOCK_SUCCESS</option>
+                                    <option value="UNLOCK_DENIED">UNLOCK_DENIED</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ledger History Table (Sticky Header, Zebra Rows, Padding) -->
+                    <div class="glass-card">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Block #</th>
+                                        <th>Timestamp</th>
+                                        <th>User</th>
+                                        <th>Role</th>
+                                        <th>Action</th>
+                                        <th>Paper</th>
+                                        <th>Integrity</th>
+                                        <th>Proof</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="audit-table-body">
+                                    <tr><td colspan="8" style="text-align:center; padding:2.5rem; color:var(--text-muted)">Loading audit ledger...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="page-view" id="view-users">
+                    <div class="view-header">
+                        <div class="view-header-title-group">
+                            <div class="view-header-badge indigo">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="9" cy="7" r="4"></circle>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="view-breadcrumb">Administration &bull; Access Control</div>
+                                <h1 class="view-title">User &amp; Role Management</h1>
+                                <p class="view-subtitle">New accounts start as Pending. Assign each one a role before they can sign in.</p>
+                            </div>
+                        </div>
+                        <div>
+                            <button class="dash-refresh-btn" data-act="loadUsersData">
+                                <svg class="refresh-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="23 4 23 10 17 10"></polyline>
+                                    <polyline points="1 20 1 14 7 14"></polyline>
+                                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                                </svg>
+                                <span>Refresh</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="glass-card">
+                        <div style="overflow-x:auto">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Role</th>
+                                        <th>Joined</th>
+                                        <th>Assign Role</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-table-body">
+                                    <tr><td colspan="5" style="text-align:center; padding:2rem; color:var(--text-muted)">Loading users...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- ========================================================= -->
+        <!-- MODALS (Close buttons with clean text, no symbols) -->
+        <!-- ========================================================= -->
+
+        <!-- 2. Approver Sign-off Modal -->
+        <div class="modal-overlay" id="approve-modal">
+            <div class="modal-box">
+                <div class="modal-header">
+                    <div class="modal-title">Cryptographic Approver Authorization</div>
+                    <button type="button" class="btn btn-outline btn-sm close-modal-btn">Close</button>
+                </div>
+                <form id="approve-sign-form">
+                    <div class="modal-body">
+                        <input type="hidden" id="approve-paper-id">
+                        <p style="font-size:15px; color:var(--text-secondary); margin-bottom:1.25rem">
+                            You are approving this paper and counting your key share toward the unlock threshold:
+                            <strong style="color:var(--text-primary)" id="approve-modal-code"></strong>.
+                        </p>
+                        
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary close-modal-btn">Cancel</button>
+                        <button type="submit" class="btn btn-emerald">Approve Paper</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 3. Cryptographic Proof Inspector Modal -->
+        <div class="modal-overlay" id="proof-modal">
+            <div class="modal-box">
+                <div class="modal-header">
+                    <div class="modal-title">Cryptographic Hash Chain Proof</div>
+                    <button type="button" class="btn btn-outline btn-sm close-modal-btn">Close</button>
+                </div>
+                <div class="modal-body" id="proof-modal-body">
+                    <!-- Populated dynamically via App.openProofModal() -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary close-modal-btn">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Paper Details Modal -->
+        <div class="modal-overlay" id="details-modal">
+            <div class="modal-box">
+                <div class="modal-header">
+                    <div class="modal-title">Question Paper Security Profile</div>
+                    <button type="button" class="btn btn-outline btn-sm close-modal-btn">Close</button>
+                </div>
+                <div class="modal-body" id="details-modal-body">
+                    <!-- Populated dynamically via App.openPaperDetailsModal() -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary close-modal-btn">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notifications Container -->
+        <div id="toast-container"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
