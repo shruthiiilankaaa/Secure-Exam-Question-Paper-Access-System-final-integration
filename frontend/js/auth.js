@@ -116,25 +116,92 @@ const Auth = {
 
     async handleSignup(e, toggleForms) {
         e.preventDefault();
-        const name = document.getElementById('signup-name').value.trim();
-        const email = document.getElementById('signup-email').value.trim();
-        const password = document.getElementById('signup-password').value;
+        const name = (document.getElementById('signup-name')?.value || '').trim();
+        const rawEmail = document.getElementById('signup-email')?.value || '';
+        const password = document.getElementById('signup-password')?.value || '';
+
+        if (!name) {
+            App.showToast('Please enter your full name.', 'warning');
+            return;
+        }
+
+        // 1. Normalize email: trim whitespace and lowercase
+        const cleanEmail = rawEmail.trim().toLowerCase();
+
+        // 2. Validate email is @iiitkottayam.ac.in
+        // Reject other domains, subdomains, malformed addresses, obvious lookalike domains
+        const emailRegex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
+        if (!emailRegex.test(cleanEmail)) {
+            App.showToast('Please enter a valid email address.', 'error');
+            return;
+        }
+
+        const emailParts = cleanEmail.split('@');
+        if (emailParts.length !== 2 || emailParts[1] !== 'iiitkottayam.ac.in') {
+            App.showToast('Only @iiitkottayam.ac.in email addresses can register.', 'error');
+            return;
+        }
+
+        const localPart = emailParts[0];
+
+        // 3. Password frontend validation:
+        // - minimum 10 characters
+        // - maximum 72 characters
+        // - uppercase
+        // - lowercase
+        // - number
+        // - special character
+        // - must not contain the email local/name part
+        if (password.length < 10) {
+            App.showToast('Password must be at least 10 characters.', 'error');
+            return;
+        }
+        if (password.length > 72) {
+            App.showToast('Password must be at most 72 characters.', 'error');
+            return;
+        }
+        if (!/[A-Z]/.test(password)) {
+            App.showToast('Password must contain an uppercase letter.', 'error');
+            return;
+        }
+        if (!/[a-z]/.test(password)) {
+            App.showToast('Password must contain a lowercase letter.', 'error');
+            return;
+        }
+        if (!/[0-9]/.test(password)) {
+            App.showToast('Password must contain a number.', 'error');
+            return;
+        }
+        if (!/[^A-Za-z0-9]/.test(password)) {
+            App.showToast('Password must contain a special character.', 'error');
+            return;
+        }
+        if (localPart && localPart.length >= 3 && password.toLowerCase().includes(localPart)) {
+            App.showToast('Password must not contain your email username.', 'error');
+            return;
+        }
 
         const btn = document.getElementById('signup-submit-btn');
-        btn.disabled = true;
-        btn.textContent = 'Creating account...';
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = 'Creating account...';
+        }
 
         try {
-            const res = await API.auth.signup({ name, email, password });
-            App.showToast(res.message || 'Account created. An admin will assign your role before you can sign in.', 'success');
-            document.getElementById('signup-form').reset();
-            document.getElementById('login-email').value = email;
+            // Must NOT contain a role field. Sends existing: name, email, password
+            await API.auth.signup({ name, email: cleanEmail, password });
+            App.showToast('Account created, awaiting admin approval', 'success');
+            document.getElementById('signup-form')?.reset();
+            const loginEmailInput = document.getElementById('login-email');
+            if (loginEmailInput) loginEmailInput.value = cleanEmail;
             toggleForms(false);
         } catch (err) {
             App.showToast(err.message || 'Sign up failed.', 'error');
         } finally {
-            btn.disabled = false;
-            btn.textContent = 'Create Account';
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = 'Create Account';
+            }
         }
     },
 
@@ -233,10 +300,14 @@ const Auth = {
         const isSetter = role === 'setter';
         const isInvigilator = role === 'invigilator';
         const isAdmin = role === 'admin';
-        // Admin manages accounts only — it never sees the paper approval board
-        if (tabApprovals) tabApprovals.style.display = isAdmin ? 'none' : 'flex';
+
+        // Approvals / Approval Status: visible to admin, setter, approver, invigilator
+        if (tabApprovals) tabApprovals.style.display = 'flex';
+        // Upload: setter only (hidden for admin)
         if (tabUpload) tabUpload.style.display = isSetter ? 'flex' : 'none';
+        // Unlock: invigilator only (hidden for admin)
         if (tabUnlock) tabUnlock.style.display = isInvigilator ? 'flex' : 'none';
+        // Users: admin only
         if (tabUsers) tabUsers.style.display = isAdmin ? 'flex' : 'none';
     }
 };

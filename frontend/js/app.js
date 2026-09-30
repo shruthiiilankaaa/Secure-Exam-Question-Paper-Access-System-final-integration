@@ -42,6 +42,19 @@ const App = {
             return;
         }
 
+        // Role-based view guards
+        const user = Auth.currentUser;
+        if (user) {
+            if (user.role === 'admin' && (viewId === 'view-upload' || viewId === 'view-unlock')) {
+                this.switchView('view-dashboard');
+                return;
+            }
+            if (user.role !== 'admin' && viewId === 'view-users') {
+                this.switchView('view-dashboard');
+                return;
+            }
+        }
+
         document.querySelectorAll('.page-view').forEach(view => {
             view.classList.remove('active-view');
         });
@@ -160,33 +173,6 @@ const App = {
                                 ${quickActionBtn}
                             </div>
                         </div>
-
-                        <div class="dash-trust-strip">
-                            <div class="trust-badge-item">
-                                <div class="trust-badge-icon blue">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                                </div>
-                                <span>AES-256-GCM Vault</span>
-                            </div>
-                            <div class="trust-badge-item">
-                                <div class="trust-badge-icon amber">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
-                                </div>
-                                <span>Shamir Consensus (k-of-n)</span>
-                            </div>
-                            <div class="trust-badge-item">
-                                <div class="trust-badge-icon emerald">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                                </div>
-                                <span>SHA-256 Hash Chain Intact</span>
-                            </div>
-                            <div class="trust-badge-item">
-                                <div class="trust-badge-icon purple">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
-                                </div>
-                                <span>Time-Lock Enforcement Active</span>
-                            </div>
-                        </div>
                     </div>
                 </div>
             `;
@@ -254,9 +240,8 @@ const App = {
                 `Papers currently ready to decrypt: <strong>${readyCount}</strong>. A paper unlocks only when enough approvers have signed off and the exam window is open.`,
                 'btn-emerald', 'view-unlock', 'Unlock Exam Paper');
         } else if (role === 'admin') {
-            const pendingUsers = Object.values(this.people).filter(u => u.role === 'pending').length;
-            content = card('Administration Station',
-                `<strong>${pendingUsers}</strong> account(s) awaiting a role assignment. Assign setter, approver or invigilator before they can sign in.`,
+            content = card('Administration',
+                'Manage user accounts and assign examination roles.',
                 'btn-primary', 'view-users', 'Manage Users');
         }
         container.innerHTML = content;
@@ -459,9 +444,9 @@ const App = {
                     <td>${p.approvals.length} / ${p.k}</td>
                     <td><span class="status-badge ${this.getStatusBadgeClass(p.uiStatus)}">${p.uiStatus.replace(/_/g, ' ')}</span></td>
                     <td>
-                        ${p.ready ? `
+                        ${(p.ready && Auth.currentUser?.role === 'invigilator') ? `
                             <button class="btn btn-emerald btn-sm" data-act="downloadDecryptedPaper" data-arg="${this.esc(p.id)}">Decrypt &amp; Download</button>
-                        ` : `<span style="font-size:0.8rem; color:var(--text-muted)">Locked until approvals &amp; window</span>`}
+                        ` : (Auth.currentUser?.role === 'admin' ? `<span style="font-size:0.8rem; color:var(--text-muted)">Invigilator role required</span>` : (p.ready ? `<span style="font-size:0.8rem; color:var(--text-muted)">Invigilator role required</span>` : `<span style="font-size:0.8rem; color:var(--text-muted)">Locked until approvals &amp; window</span>`))}
                     </td>
                 </tr>`).join('');
         } catch (err) {
@@ -470,6 +455,10 @@ const App = {
     },
 
     async downloadDecryptedPaper(paperId) {
+        if (Auth.currentUser?.role === 'admin') {
+            this.showToast('Admins cannot decrypt examination papers.', 'warning');
+            return;
+        }
         const paper = this.cachedPapers.find(p => p.id === paperId);
         this.showToast('Reconstructing AES-256 key from Shamir shares & decrypting...', 'info');
         try {
@@ -538,8 +527,8 @@ const App = {
             const percent = Math.min(100, Math.round((approvedCount / p.k) * 100));
             const isDesignated = (p.approverIds || []).includes(user?.id);
             const isUserApproved = p.approvals.some(a => a.approverId === user?.id);
-            const canApprove = (user?.role === 'approver' || user?.role === 'invigilator') && isDesignated && !isUserApproved;
-            const canDecrypt = user?.role === 'invigilator' && p.ready;
+            const canApprove = user?.role !== 'admin' && (user?.role === 'approver' || user?.role === 'invigilator') && isDesignated && !isUserApproved;
+            const canDecrypt = user?.role !== 'admin' && user?.role === 'invigilator' && p.ready;
 
             return `
                 <div class="paper-card">
@@ -786,46 +775,79 @@ const App = {
     async loadUsersData() {
         const tableBody = document.getElementById('users-table-body');
         if (!tableBody) return;
+
+        // Loading state
+        tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:2rem; color:var(--text-muted)">Loading users...</td></tr>`;
+
         try {
             const res = await API.admin.users();
             const users = res.users || [];
             users.forEach(u => { this.people[u.id] = u; });
 
-            // pending accounts first, so the admin sees what needs attention
-            users.sort((a, b) => (a.role === 'pending' ? -1 : 0) - (b.role === 'pending' ? -1 : 0));
+            // Sort pending users first; then by createdAt descending
+            users.sort((a, b) => {
+                const aPending = (a.role || '').toLowerCase() === 'pending';
+                const bPending = (b.role || '').toLowerCase() === 'pending';
+                if (aPending && !bPending) return -1;
+                if (!aPending && bPending) return 1;
+                return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+            });
 
             if (!users.length) {
                 tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:2rem; color:var(--text-muted)">No users found.</td></tr>`;
                 return;
             }
 
-            const assignable = ['setter', 'approver', 'invigilator'];
+            const currentAdminId = Auth.currentUser?.id || Auth.currentUser?._id;
+
+            // Role dropdown may contain ONLY: Pending, Setter, Approver, Invigilator
+            // Do NOT include Admin as an option
+            const roleOptions = [
+                { value: 'pending', label: 'Pending' },
+                { value: 'setter', label: 'Setter' },
+                { value: 'approver', label: 'Approver' },
+                { value: 'invigilator', label: 'Invigilator' }
+            ];
+
             tableBody.innerHTML = users.map(u => {
-                const isSelf = u.id === Auth.currentUser?.id;
-                const isAdminRow = u.role === 'admin';
-                const options = assignable.map(r =>
-                    `<option value="${r}" ${u.role === r ? 'selected' : ''}>${r}</option>`).join('');
+                const isSelf = currentAdminId && String(u.id) === String(currentAdminId);
+                const isAdminRow = (u.role || '').toLowerCase() === 'admin';
+                const formattedDate = u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—';
+
+                // Escaped user-controlled fields
+                const escapedName = this.esc(u.name);
+                const escapedEmail = this.esc(u.email);
+                const escapedRole = this.esc(u.role);
+                const escapedDate = this.esc(formattedDate);
+                const escapedId = this.esc(u.id);
+
+                const optionsHtml = roleOptions.map(opt =>
+                    `<option value="${this.esc(opt.value)}" ${(u.role || '').toLowerCase() === opt.value ? 'selected' : ''}>${this.esc(opt.label)}</option>`
+                ).join('');
 
                 return `
                     <tr>
-                        <td><strong>${this.esc(u.name)}</strong>${isSelf ? ' <span style="color:var(--text-muted); font-size:0.72rem">(you)</span>' : ''}</td>
-                        <td style="color:var(--text-secondary)">${this.esc(u.email)}</td>
-                        <td><span class="role-tag ${this.esc(u.role)}">${this.esc(u.role).toUpperCase()}</span></td>
-                        <td style="font-size:0.8rem; color:var(--text-secondary)">${u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'}</td>
+                        <td><strong>${escapedName}</strong>${isSelf ? ' <span style="color:var(--text-muted); font-size:0.75rem">(you)</span>' : ''}</td>
+                        <td style="color:var(--text-secondary)">${escapedEmail}</td>
+                        <td><span class="role-tag ${escapedRole}">${escapedRole.toUpperCase()}</span></td>
+                        <td style="font-size:0.85rem; color:var(--text-secondary)">${escapedDate}</td>
                         <td>
-                            ${isSelf || isAdminRow
-                                ? `<span style="font-size:0.78rem; color:var(--text-muted)">${isSelf ? 'Cannot edit yourself' : 'Admin account'}</span>`
-                                : `<div style="display:flex; gap:0.5rem; align-items:center">
-                                        <select class="form-select" style="width:auto; padding:0.35rem 0.6rem; font-size:0.8rem" id="role-select-${this.esc(u.id)}">
-                                            ${options}
-                                        </select>
-                                        <button class="btn btn-secondary btn-sm" data-act="saveRole" data-arg="${this.esc(u.id)}">Save</button>
-                                   </div>`}
+                            ${isAdminRow
+                                ? `<span style="font-size:0.8rem; color:var(--text-muted)">Admin account</span>`
+                                : (isSelf
+                                    ? `<span style="font-size:0.8rem; color:var(--text-muted)">Cannot change own role</span>`
+                                    : `<div style="display:flex; gap:0.5rem; align-items:center">
+                                            <select class="form-select" style="width:auto; padding:0.35rem 0.65rem; font-size:0.85rem" id="role-select-${escapedId}">
+                                                ${optionsHtml}
+                                            </select>
+                                            <button class="btn btn-secondary btn-sm" data-act="saveRole" data-arg="${escapedId}">Save</button>
+                                       </div>`)}
                         </td>
                     </tr>`;
             }).join('');
         } catch (err) {
-            tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:2rem; color:#dc2626">${this.esc(err.message)}</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:2rem; color:#dc2626">${this.esc(err.message || 'Failed to load users')}</td></tr>`;
+            this.showToast(err.message || 'Failed to load users', 'error');
         }
     },
 
@@ -833,10 +855,18 @@ const App = {
         const select = document.getElementById(`role-select-${userId}`);
         if (!select) return;
         const role = select.value;
+
+        // Validate the selected role is only: setter, approver, invigilator
+        const allowedRoles = ['setter', 'approver', 'invigilator'];
+        if (!allowedRoles.includes(role)) {
+            this.showToast('Please select a valid examination role (Setter, Approver, or Invigilator).', 'warning');
+            return;
+        }
+
         try {
             await API.admin.setRole(userId, role);
             this.showToast(`Role updated to ${role}.`, 'success');
-            this.loadUsersData();
+            await this.loadUsersData();
         } catch (err) {
             this.showToast(err.message || 'Could not update role', 'error');
         }
@@ -856,6 +886,10 @@ const App = {
         if (approveForm) {
             approveForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
+                if (Auth.currentUser?.role === 'admin') {
+                    this.showToast('Admins cannot approve examination papers.', 'warning');
+                    return;
+                }
                 const paperId = document.getElementById('approve-paper-id').value;
                 try {
                     const r = await API.papers.approve(paperId);
@@ -870,6 +904,10 @@ const App = {
     },
 
     openApproveModal(paperId) {
+        if (Auth.currentUser?.role === 'admin') {
+            this.showToast('Admins cannot approve examination papers.', 'warning');
+            return;
+        }
         const paper = this.cachedPapers.find(p => p.id === paperId);
         document.getElementById('approve-paper-id').value = paperId;
         document.getElementById('approve-modal-code').textContent = paper?.title || paperId;
