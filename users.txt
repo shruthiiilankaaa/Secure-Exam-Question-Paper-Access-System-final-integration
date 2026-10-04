@@ -1,0 +1,23 @@
+Admin
+Email: admin@iiitkottayam.ac.in
+Password: Secure@12345
+
+Approver 1
+Email:    flow-approver1@iiitkottayam.ac.in
+Password: Str0ng!Passw0rd#2026
+
+Approver 2
+Email:    flow-approver2@iiitkottayam.ac.in
+Password: Str0ng!Passw0rd#2026
+
+Invigilator
+Email:    flow-invigilator1@iiitkottayam.ac.in
+Password: Str0ng!Passw0rd#2026
+
+Setter 1
+Email: flow-setter1@iiitkottayam.ac.in
+Password: Str0ngPaSsword@2026
+
+Setter 2
+Email: flow-setter2@iiitkottayam.ac.in
+Password: Str0ngPaSSword@2026
