@@ -8,6 +8,12 @@ const { paperFilterFor } = require('../utils/access');
 const OBJECT_ID = /^[a-f0-9]{24}$/i;
 const PRIVILEGED = new Set(['admin', 'invigilator']);
 
+const {
+  getDemoStatus,
+  simulateTampering,
+  restoreTampering,
+} = require('../services/auditDemo');
+
 // History. admin/invigilator see everything (incl. actor e-mails); everyone
 // else only sees entries for papers they may view plus their own actions,
 // and never other people's e-mail addresses.
@@ -41,7 +47,11 @@ const getAuditHistory = async (req, res) => {
       .populate('paperId', 'title')
       .lean();
 
-    return res.json(entries.map((e) => ({ ...e, index: position.get(String(e._id)) })));
+    return res.json(entries.map((e) => ({
+      ...e,
+      index: position.get(String(e._id)),
+      isSimulatedTamper: !!(e.details && e.details._simulatedTamper),
+    })));
   } catch (err) {
     console.error('audit history error:', err);
     return res.status(500).json({ message: 'could not load audit log' });
@@ -51,11 +61,64 @@ const getAuditHistory = async (req, res) => {
 // Integrity check — cached + rate-limited (see routes / service).
 const verifyAuditChain = async (req, res) => {
   try {
-    return res.json(await verifyChain());
+    const force = req.query.force === 'true' || req.query.force === '1';
+    return res.json(await verifyChain({ force }));
   } catch (err) {
     console.error('audit verify error:', err);
     return res.status(500).json({ message: 'could not verify audit log' });
   }
 };
 
-module.exports = { getAuditHistory, verifyAuditChain };
+// Demo status (enabled flag + active simulation info)
+const getAuditDemoStatus = async (req, res) => {
+  try {
+    return res.json(getDemoStatus());
+  } catch (err) {
+    console.error('audit demo status error:', err);
+    return res.status(500).json({ message: 'could not get audit demo status' });
+  }
+};
+
+// Create a deliberate tampering simulation (Admin + demo flag only)
+const simulateAuditTamper = async (req, res) => {
+  try {
+    const { targetId } = req.body || {};
+    if (targetId !== undefined && (typeof targetId !== 'string' || !targetId.trim())) {
+      return res.status(400).json({ message: 'invalid targetId' });
+    }
+    const result = await simulateTampering({ targetId: targetId ? targetId.trim() : undefined });
+    if (result.error) {
+      return res.status(result.status || 400).json({ message: result.message, error: result.error });
+    }
+    return res.json(result);
+  } catch (err) {
+    console.error('simulate tamper error:', err);
+    return res.status(500).json({ message: 'could not create tampering simulation' });
+  }
+};
+
+// Restore the original record from snapshot captured before simulation
+const restoreAuditTamper = async (req, res) => {
+  try {
+    const result = await restoreTampering();
+    if (result.error) {
+      return res.status(result.status || 400).json({
+        message: result.message,
+        error: result.error,
+        verification: result.verification || null,
+      });
+    }
+    return res.json(result);
+  } catch (err) {
+    console.error('restore tamper error:', err);
+    return res.status(500).json({ message: 'could not restore audit tampering' });
+  }
+};
+
+module.exports = {
+  getAuditHistory,
+  verifyAuditChain,
+  getAuditDemoStatus,
+  simulateAuditTamper,
+  restoreAuditTamper,
+};

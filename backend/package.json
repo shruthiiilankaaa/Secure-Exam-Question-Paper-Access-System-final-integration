@@ -11,6 +11,7 @@
     "test:auth": "node test-auth-admin.js",
     "test:unit": "node test-units.js",
     "test:flow": "node test-flow.js",
+    "test:tamper": "node test-audit-tampering.js",
     "seed:users": "node scripts/seedUsers.js",
     "migrate:shares": "node scripts/wrapExistingShares.js"
   },

@@ -92,21 +92,21 @@ async function verifyChain({ force = false } = {}) {
   for (let i = 0; i < entries.length; i++) {
     const e = entries[i];
     if (e.prevHash !== expectedPrevHash) {
-      result = { valid: false, brokenAtIndex: i, reason: 'prevHash mismatch (record deleted/reordered?)' };
+      result = { valid: false, brokenAtIndex: i, reason: 'prevHash mismatch (record deleted/reordered?)', entriesChecked: entries.length };
       break;
     }
     if (e.v === 2) {
       if (prevSeq !== null && e.seq !== prevSeq + 1) {
-        result = { valid: false, brokenAtIndex: i, reason: 'sequence gap (record deleted/inserted?)' };
+        result = { valid: false, brokenAtIndex: i, reason: 'sequence gap (record deleted/inserted?)', entriesChecked: entries.length };
         break;
       }
       prevSeq = e.seq;
     } else if (prevSeq !== null) {
-      result = { valid: false, brokenAtIndex: i, reason: 'legacy entry after keyed entries' };
+      result = { valid: false, brokenAtIndex: i, reason: 'legacy entry after keyed entries', entriesChecked: entries.length };
       break;
     }
     if (computeHash(e) !== e.hash) {
-      result = { valid: false, brokenAtIndex: i, reason: 'stored hash does not match recomputed hash (record modified)' };
+      result = { valid: false, brokenAtIndex: i, reason: 'stored hash does not match recomputed hash (record modified)', entriesChecked: entries.length };
       break;
     }
     expectedPrevHash = e.hash;
@@ -123,4 +123,8 @@ async function verifyChain({ force = false } = {}) {
   return result;
 }
 
-module.exports = { appendEntry, verifyChain, GENESIS_HASH, SORT };
+function invalidateVerifyCache() {
+  verifyCache = null;
+}
+
+module.exports = { appendEntry, verifyChain, invalidateVerifyCache, computeHash, GENESIS_HASH, SORT, SORT_DESC };

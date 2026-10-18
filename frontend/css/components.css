@@ -467,6 +467,27 @@
 /* -------------------------------------------------------------
    7. AUDIT VERIFICATION (Enterprise Info Banner & White Table)
    ------------------------------------------------------------- */
+.audit-view-header {
+  align-items: flex-start;
+}
+
+.audit-actions-group {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.audit-actions-group .btn {
+  height: 36px;
+  padding: 0 1rem;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
 /* Green info banner when valid */
 .verification-banner.valid {
   background: #f0fdf4;
@@ -478,7 +499,7 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 1.25rem;
-  margin-bottom: 2.25rem;
+  margin-bottom: 2rem;
 }
 
 .verification-banner.valid .banner-title {
@@ -503,7 +524,7 @@
   border-left: 4px solid var(--rose);
   border-radius: var(--radius-card);
   padding: 1.5rem 1.75rem;
-  margin-bottom: 2.25rem;
+  margin-bottom: 2rem;
   box-shadow: var(--shadow-card);
 }
 
@@ -512,6 +533,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .alert-indicator.success { background: var(--emerald); }
@@ -525,23 +547,136 @@
   margin-top: 1rem;
 }
 
+/* Responsive 3-column grid with equal-share columns that never overflow */
 .corrupted-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1rem;
-  font-size: 13px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+  align-items: flex-start;
   margin-top: 0.75rem;
 }
 
+.corrupted-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.corrupted-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+}
+
+.corrupted-value {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.4;
+  min-width: 0;
+}
+
+.hash-value-container {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.hash-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid #fca5a5;
+  background: #ffffff;
+  color: #b91c1c;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+
+.hash-copy-btn:hover {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Search and Filters Bar */
+.audit-filter-card {
+  margin-bottom: 2rem;
+  padding: 1.25rem 1.5rem;
+}
+
+.audit-filter-bar {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.audit-search-wrap {
+  flex: 1 1 320px;
+  min-width: 240px;
+}
+
+.audit-select-wrap {
+  flex: 0 1 240px;
+  min-width: 200px;
+}
+
+.audit-filter-bar .form-input,
+.audit-filter-bar .form-select {
+  height: 42px;
+  padding: 0 1rem;
+  line-height: 40px;
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 13.5px;
+  border-radius: var(--radius-sm);
+  background-color: #ffffff;
+}
+
+.audit-filter-bar .form-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 14px 14px;
+  padding-right: 2.25rem;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
 /* White Enterprise Table with Sticky Header & Zebra Rows */
+.audit-table-card {
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+}
+
 .table-responsive {
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   max-height: 600px;
   border-radius: var(--radius-card);
   border: 1px solid var(--border-card);
   background: #ffffff;
   box-shadow: var(--shadow-card);
+}
+
+.audit-table-card .table-responsive {
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
 }
 
 .data-table {
@@ -556,20 +691,100 @@
   top: 0;
   z-index: 10;
   background: #f8fafc;
-  padding: 14px 18px;
+  padding: 12px 14px;
   font-weight: 600;
   color: #4b5563;
   border-bottom: 1px solid var(--border-subtle);
-  font-size: 13px;
+  font-size: 12.5px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  white-space: nowrap;
 }
 
 .data-table td {
-  padding: 14px 18px;
+  padding: 11px 14px;
   border-bottom: 1px solid var(--border-subtle);
   color: #111827;
   vertical-align: middle;
+}
+
+/* Column width proportions */
+.audit-data-table .col-seq {
+  width: 70px;
+  min-width: 65px;
+}
+
+.audit-data-table .col-time {
+  width: 155px;
+  min-width: 145px;
+  white-space: nowrap;
+}
+
+.audit-data-table .col-user {
+  min-width: 150px;
+  max-width: 190px;
+}
+
+.audit-data-table .col-role {
+  width: 95px;
+  min-width: 85px;
+}
+
+.audit-data-table .col-action {
+  width: 180px;
+  min-width: 165px;
+  white-space: nowrap;
+}
+
+.audit-data-table .col-paper {
+  min-width: 140px;
+  max-width: 220px;
+}
+
+.audit-data-table .col-status {
+  width: 95px;
+  min-width: 85px;
+}
+
+.audit-data-table .col-proof {
+  width: 80px;
+  min-width: 75px;
+  text-align: center;
+}
+
+/* Cell content formatters */
+.audit-user-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 175px;
+}
+
+.audit-user-email {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 175px;
+}
+
+.audit-paper-title {
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+.audit-action-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
 }
 
 /* Zebra Rows */
@@ -589,4 +804,22 @@
 .data-table tbody tr.corrupted-row {
   background: #fef2f2 !important;
   border-left: 3px solid var(--rose);
+}
+
+/* Responsive Overrides */
+@media (max-width: 860px) {
+  .corrupted-grid {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .audit-actions-group {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .audit-select-wrap {
+    flex: 1 1 100%;
+  }
 }

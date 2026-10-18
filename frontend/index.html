@@ -519,7 +519,7 @@
                 <!-- 6. AUDIT HISTORY & VERIFICATION CENTER (PART 3, 4, 5) -->
                 <!-- ========================================================= -->
                 <section class="page-view" id="view-audit">
-                    <div class="view-header">
+                    <div class="view-header audit-view-header">
                         <div class="view-header-title-group">
                             <div class="view-header-badge emerald">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -527,15 +527,21 @@
                                     <polyline points="9 12 11 14 15 10"></polyline>
                                 </svg>
                             </div>
-                            <div>
+                            <div class="view-header-text">
                                 <div class="view-breadcrumb">Security Audit &bull; Mathematical Cryptographic Ledger</div>
                                 <h1 class="view-title">Tamper-Evident Audit Ledger & Verification</h1>
                                 <p class="view-subtitle">SHA-256 hash chain over each entry (action, actor, paper, details, timestamp) linked to the previous entry's hash</p>
                             </div>
                         </div>
-                        <div style="display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center">
+                        <div class="audit-actions-group" id="audit-actions-group">
                             <button class="btn btn-primary btn-sm" id="run-verify-btn">
-                                Verify Hash Chain Now
+                                Verify Hash Chain
+                            </button>
+                            <button class="btn btn-danger btn-sm" id="simulate-tamper-btn" style="display:none">
+                                Simulate Tampering
+                            </button>
+                            <button class="btn btn-emerald btn-sm" id="restore-chain-btn" style="display:none">
+                                Restore Original Entry
                             </button>
                         </div>
                     </div>
@@ -546,13 +552,13 @@
                     </div>
 
                     <!-- Filter and Search Bar (PART 5) -->
-                    <div class="glass-card" style="margin-bottom:2rem; padding:1.25rem 1.5rem">
-                        <div style="display:flex; gap:1.25rem; align-items:center; flex-wrap:wrap">
-                            <div style="flex:1; min-width:260px">
-                                <input type="text" id="audit-search-input" class="form-input" style="width:100%" placeholder="Search audit ledger by user, action, paper ID, or hash...">
+                    <div class="glass-card audit-filter-card">
+                        <div class="audit-filter-bar">
+                            <div class="audit-search-wrap">
+                                <input type="text" id="audit-search-input" class="form-input" placeholder="Search audit ledger by user, action, paper ID, or hash...">
                             </div>
-                            <div style="min-width:220px">
-                                <select id="audit-action-filter" class="form-select" style="width:100%">
+                            <div class="audit-select-wrap">
+                                <select id="audit-action-filter" class="form-select">
                                     <option value="ALL">All Actions</option>
                                     <option value="PAPER_UPLOADED">PAPER_UPLOADED</option>
                                     <option value="APPROVAL_SUBMITTED">APPROVAL_SUBMITTED</option>
@@ -565,19 +571,19 @@
                     </div>
 
                     <!-- Ledger History Table (Sticky Header, Zebra Rows, Padding) -->
-                    <div class="glass-card">
+                    <div class="glass-card audit-table-card">
                         <div class="table-responsive">
-                            <table class="data-table">
+                            <table class="data-table audit-data-table">
                                 <thead>
                                     <tr>
-                                        <th>Block #</th>
-                                        <th>Timestamp</th>
-                                        <th>User</th>
-                                        <th>Role</th>
-                                        <th>Action</th>
-                                        <th>Paper</th>
-                                        <th>Integrity</th>
-                                        <th>Proof</th>
+                                        <th class="col-seq">Block #</th>
+                                        <th class="col-time">Timestamp</th>
+                                        <th class="col-user">User</th>
+                                        <th class="col-role">Role</th>
+                                        <th class="col-action">Action</th>
+                                        <th class="col-paper">Paper</th>
+                                        <th class="col-status">Integrity</th>
+                                        <th class="col-proof">Proof</th>
                                     </tr>
                                 </thead>
                                 <tbody id="audit-table-body">
@@ -695,6 +701,66 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary close-modal-btn">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Tampering Simulation Modal (Admin Demo Only) -->
+        <div class="modal-overlay" id="tamper-modal">
+            <div class="modal-box">
+                <div class="modal-header">
+                    <div class="modal-title" style="color:var(--text-primary)">Simulate Audit Tampering</div>
+                    <button type="button" class="btn btn-outline btn-sm close-modal-btn">Close</button>
+                </div>
+                <form id="tamper-simulation-form">
+                    <div class="modal-body">
+                        <p style="font-size:14px; color:var(--text-secondary); line-height:1.5; margin:0 0 1.25rem 0">
+                            This lets you test whether the audit log can detect changes. We'll modify one audit entry, check the hash chain, and then restore the original entry.
+                        </p>
+
+                        <div class="form-group" style="margin-bottom:1rem">
+                            <label class="form-label" for="tamper-target-select" style="font-weight:600; font-size:13px; color:var(--text-primary); margin-bottom:0.4rem; display:block">Audit entry to modify</label>
+                            <select id="tamper-target-select" class="form-select" style="width:100%">
+                                <option value="AUTO">Latest entry</option>
+                            </select>
+                            <div id="tamper-selected-preview" style="margin-top:0.5rem; padding:0.6rem 0.75rem; background:#f8fafc; border:1px solid var(--border-subtle); border-radius:var(--radius-md); font-size:12px; color:var(--text-secondary)">
+                                Loading entry preview...
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom:1.25rem; padding-top:0.25rem">
+                            <label style="display:flex; align-items:center; gap:0.6rem; cursor:pointer; font-size:13px; color:var(--text-primary); margin:0">
+                                <input type="checkbox" id="tamper-confirm-checkbox" required style="width:16px; height:16px; accent-color:var(--rose)">
+                                <span>I understand this will temporarily modify an audit entry for testing.</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary close-modal-btn">Cancel</button>
+                        <button type="submit" class="btn btn-danger" id="tamper-modal-submit-btn">Simulate Tampering</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 6. Restore Original Entry Modal -->
+        <div class="modal-overlay" id="restore-modal">
+            <div class="modal-box">
+                <div class="modal-header">
+                    <div class="modal-title" style="color:var(--text-primary)">Restore Original Entry</div>
+                    <button type="button" class="btn btn-outline btn-sm close-modal-btn">Close</button>
+                </div>
+                <div class="modal-body">
+                    <p style="font-size:14px; color:var(--text-secondary); line-height:1.5; margin:0 0 1rem 0">
+                        Restore the temporarily modified audit entry back to its original state captured before testing.
+                    </p>
+                    <div id="restore-modal-info" style="font-size:13px; color:var(--text-secondary); margin-bottom:1rem">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary close-modal-btn">Cancel</button>
+                    <button type="button" class="btn btn-emerald" id="confirm-restore-btn">Restore Original Entry</button>
                 </div>
             </div>
         </div>

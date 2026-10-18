@@ -182,8 +182,22 @@ const API = {
         history(paperId) {
             return API.request(`/audit${paperId ? `?paperId=${encodeURIComponent(paperId)}` : ''}`);
         },
-        verify() {
-            return API.request('/audit/verify');
+        verify(force = false) {
+            return API.request(`/audit/verify${force ? '?force=true' : ''}`);
+        },
+        demoStatus() {
+            return API.request('/audit/demo-status');
+        },
+        simulateTamper(targetId) {
+            return API.request('/audit/simulate-tamper', {
+                method: 'POST',
+                body: JSON.stringify(targetId ? { targetId } : {})
+            });
+        },
+        restoreTamper() {
+            return API.request('/audit/restore-tamper', {
+                method: 'POST'
+            });
         }
     }
 };

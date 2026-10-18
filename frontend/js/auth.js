@@ -309,6 +309,10 @@ const Auth = {
         if (tabUnlock) tabUnlock.style.display = isInvigilator ? 'flex' : 'none';
         // Users: admin only
         if (tabUsers) tabUsers.style.display = isAdmin ? 'flex' : 'none';
+
+        if (window.App && typeof window.App.updateAuditDemoControls === 'function') {
+            window.App.updateAuditDemoControls();
+        }
     }
 };
 

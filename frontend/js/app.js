@@ -567,10 +567,62 @@ const App = {
         const verifyBtn = document.getElementById('run-verify-btn');
         if (verifyBtn) verifyBtn.addEventListener('click', () => this.runAuditVerification());
 
+        const tamperBtn = document.getElementById('simulate-tamper-btn');
+        if (tamperBtn) tamperBtn.addEventListener('click', () => this.openTamperModal());
+
+        const tamperForm = document.getElementById('tamper-simulation-form');
+        if (tamperForm) tamperForm.addEventListener('submit', (e) => this.handleSimulateTamper(e));
+
+        const restoreBtn = document.getElementById('restore-chain-btn');
+        if (restoreBtn) restoreBtn.addEventListener('click', () => this.openRestoreModal());
+
+        const confirmRestoreBtn = document.getElementById('confirm-restore-btn');
+        if (confirmRestoreBtn) confirmRestoreBtn.addEventListener('click', () => this.handleRestoreChain());
+
+        const tamperSelect = document.getElementById('tamper-target-select');
+        if (tamperSelect) {
+            tamperSelect.addEventListener('change', () => {
+                if (tamperSelect.value === '__LOAD_MORE__') {
+                    this.openTamperModal(true);
+                } else {
+                    this.updateTamperPreview();
+                }
+            });
+        }
+
         const actionFilter = document.getElementById('audit-action-filter');
         const searchInput = document.getElementById('audit-search-input');
         if (actionFilter) actionFilter.addEventListener('change', () => this.filterAuditLogs());
         if (searchInput) searchInput.addEventListener('input', () => this.filterAuditLogs());
+    },
+
+    async updateAuditDemoControls() {
+        const isAdmin = Auth.currentUser?.role === 'admin';
+        const tamperBtn = document.getElementById('simulate-tamper-btn');
+        const restoreBtn = document.getElementById('restore-chain-btn');
+
+        if (!isAdmin) {
+            if (tamperBtn) tamperBtn.style.display = 'none';
+            if (restoreBtn) restoreBtn.style.display = 'none';
+            this.demoStatus = null;
+            return;
+        }
+
+        try {
+            const status = await API.audit.demoStatus();
+            this.demoStatus = status;
+            if (status && status.enabled) {
+                if (tamperBtn) tamperBtn.style.display = 'inline-flex';
+                if (restoreBtn) restoreBtn.style.display = 'inline-flex';
+            } else {
+                if (tamperBtn) tamperBtn.style.display = 'none';
+                if (restoreBtn) restoreBtn.style.display = 'none';
+            }
+        } catch {
+            if (tamperBtn) tamperBtn.style.display = 'none';
+            if (restoreBtn) restoreBtn.style.display = 'none';
+            this.demoStatus = null;
+        }
     },
 
     async fetchAuditLogs() {
@@ -581,12 +633,14 @@ const App = {
 
     async loadAuditData() {
         try {
+            await this.updateAuditDemoControls();
             const [, verifyRes] = await Promise.all([this.fetchAuditLogs(), API.audit.verify()]);
             this.lastVerify = verifyRes;
             this.renderVerificationBanner(verifyRes);
             this.renderAuditTable(this.cachedAuditLogs, verifyRes);
         } catch (err) {
             console.error('Error loading audit data:', err);
+            this.showToast(err.message || 'Failed to load audit data', 'error');
         }
     },
 
@@ -594,26 +648,176 @@ const App = {
         const btn = document.getElementById('run-verify-btn');
         if (btn) {
             btn.disabled = true;
-            btn.textContent = 'Recalculating SHA-256 Hashes...';
+            btn.textContent = 'Verifying Hash Chain...';
         }
         try {
-            const res = await API.audit.verify();
+            const res = await API.audit.verify(true);
             this.lastVerify = res;
             await this.fetchAuditLogs();
+            await this.updateAuditDemoControls();
             this.renderVerificationBanner(res);
             this.renderAuditTable(this.cachedAuditLogs, res);
 
+            const total = res.entriesChecked ?? this.cachedAuditLogs.length;
             if (res.valid) {
-                this.showToast('Audit chain verified: every entry hash and link matches.', 'success');
+                this.showToast(`Audit chain verified: all ${total} entries cryptographically intact.`, 'success');
             } else {
                 this.showToast(`TAMPERING DETECTED at block #${res.brokenAtIndex}!`, 'error');
             }
         } catch (err) {
-            this.showToast(err.message, 'error');
+            console.error('Audit verification failed:', err);
+            this.showToast(err.message || 'Audit verification request failed', 'error');
+            const banner = document.getElementById('verification-banner');
+            if (banner) {
+                banner.className = 'verification-banner tampered';
+                banner.innerHTML = `
+                    <div style="width:100%">
+                        <div class="banner-title" style="color:#b91c1c; font-size:16px; font-weight:600">
+                            Verification Request Failed
+                        </div>
+                        <div class="banner-desc" style="color:#64748b; font-size:14px; margin-top:2px">
+                            ${this.esc(err.message || 'Network error or expired session occurred during verification.')}
+                        </div>
+                    </div>`;
+            }
         } finally {
             if (btn) {
                 btn.disabled = false;
-                btn.textContent = 'Verify Hash Chain Now';
+                btn.textContent = 'Verify Hash Chain';
+            }
+        }
+    },
+
+    updateTamperPreview() {
+        const select = document.getElementById('tamper-target-select');
+        const preview = document.getElementById('tamper-selected-preview');
+        if (!select || !preview) return;
+
+        let log = null;
+        if (select.value === 'AUTO') {
+            log = this.cachedAuditLogs && this.cachedAuditLogs.length > 0
+                ? this.cachedAuditLogs[this.cachedAuditLogs.length - 1]
+                : null;
+        } else {
+            log = (this.cachedAuditLogs || []).find(l => String(l._id) === select.value);
+        }
+
+        if (!log) {
+            preview.textContent = 'No audit entry selected.';
+            return;
+        }
+
+        const actor = this.actorInfo(log);
+        preview.innerHTML = `
+            <strong>Selected:</strong> Block #${log.index} &bull; Action: <strong>${this.esc(log.action)}</strong> &bull; User: ${this.esc(actor.name || 'System')}
+        `;
+    },
+
+    openTamperModal(showAll = false) {
+        if (Auth.currentUser?.role !== 'admin') {
+            this.showToast('Administrator privileges required to simulate tampering.', 'warning');
+            return;
+        }
+        const select = document.getElementById('tamper-target-select');
+        if (select) {
+            let options = '<option value="AUTO">Latest entry</option>';
+            if (this.cachedAuditLogs && this.cachedAuditLogs.length > 0) {
+                const reversed = [...this.cachedAuditLogs].reverse();
+                const slice = showAll ? reversed : reversed.slice(0, 10);
+                options += slice.map(l => {
+                    const actor = this.actorInfo(l);
+                    return `<option value="${this.esc(l._id)}">Block #${l.index} — ${this.esc(l.action)} (${this.esc(actor.name || 'System')})</option>`;
+                }).join('');
+                if (!showAll && reversed.length > 10) {
+                    options += `<option value="__LOAD_MORE__">── Load more entries (${reversed.length} total) ──</option>`;
+                }
+            }
+            select.innerHTML = options;
+            if (!showAll) select.value = 'AUTO';
+        }
+        this.updateTamperPreview();
+        if (!showAll) {
+            const checkbox = document.getElementById('tamper-confirm-checkbox');
+            if (checkbox) checkbox.checked = false;
+        }
+        const modal = document.getElementById('tamper-modal');
+        if (modal) modal.classList.add('active');
+    },
+
+    async handleSimulateTamper(e) {
+        e.preventDefault();
+        const submitBtn = document.getElementById('tamper-modal-submit-btn');
+        const select = document.getElementById('tamper-target-select');
+        const targetId = select && select.value !== 'AUTO' ? select.value : undefined;
+
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Simulating...';
+        }
+
+        try {
+            await API.audit.simulateTamper(targetId);
+            this.showToast('Tampering simulated. Now verify the audit chain to see whether the change is detected.', 'warning');
+            document.getElementById('tamper-modal')?.classList.remove('active');
+            await this.loadAuditData();
+        } catch (err) {
+            this.showToast(err.message || 'Failed to simulate tampering', 'error');
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Simulate Tampering';
+            }
+        }
+    },
+
+    async openRestoreModal() {
+        if (Auth.currentUser?.role !== 'admin') {
+            this.showToast('Administrator privileges required to restore original entry.', 'warning');
+            return;
+        }
+        const infoDiv = document.getElementById('restore-modal-info');
+        try {
+            const status = await API.audit.demoStatus();
+            this.demoStatus = status;
+            if (infoDiv) {
+                if (status && status.activeSimulation) {
+                    const sim = status.activeSimulation;
+                    infoDiv.innerHTML = `
+                        <div style="background:#f8fafc; border:1px solid var(--border-subtle); border-radius:var(--radius-md); padding:0.75rem 1rem">
+                            <strong style="color:var(--text-primary)">Simulated Entry Details:</strong><br>
+                            Block #${this.esc(sim.seq ?? 'latest')} &bull; Action: <strong>${this.esc(sim.action)}</strong><br>
+                            <span style="color:var(--text-muted); font-size:12px">The exact pre-modification snapshot will be restored.</span>
+                        </div>`;
+                } else {
+                    infoDiv.innerHTML = `
+                        <div style="background:#fffbeb; border:1px solid #fef3c7; border-radius:var(--radius-md); padding:0.75rem 1rem; color:#92400e">
+                            No active demo simulation snapshot found. If the server was restarted, the original entry cannot be restored automatically.
+                        </div>`;
+                }
+            }
+        } catch (e) {
+            if (infoDiv) infoDiv.textContent = 'Could not query simulation status.';
+        }
+        document.getElementById('restore-modal')?.classList.add('active');
+    },
+
+    async handleRestoreChain() {
+        const btn = document.getElementById('confirm-restore-btn');
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = 'Restoring...';
+        }
+        try {
+            await API.audit.restoreTamper();
+            this.showToast('Original entry restored. Run verification again to confirm the chain is valid.', 'success');
+            document.getElementById('restore-modal')?.classList.remove('active');
+            await this.loadAuditData();
+        } catch (err) {
+            this.showToast(err.message || 'Failed to restore original entry', 'error');
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = 'Restore Original Entry';
             }
         }
     },
@@ -621,6 +825,8 @@ const App = {
     renderVerificationBanner(v) {
         const banner = document.getElementById('verification-banner');
         if (!banner) return;
+
+        const totalEntries = v.entriesChecked ?? this.cachedAuditLogs.length;
 
         if (v.valid) {
             banner.className = 'verification-banner valid';
@@ -631,31 +837,53 @@ const App = {
                         Audit Chain Valid — Cryptographically Intact
                     </div>
                     <div class="banner-desc">
-                        All <strong>${v.entriesChecked ?? 0}</strong> ledger entries verified: every stored hash matches its recomputed hash and every entry links to the one before it.
+                        All <strong>${totalEntries}</strong> ledger entries verified: every stored hash matches and every block links to its predecessor.
                     </div>
                 </div>`;
         } else {
             const bad = this.cachedAuditLogs.find(l => l.index === v.brokenAtIndex);
+            const isSimulated = this.demoStatus?.activeSimulation && String(this.demoStatus.activeSimulation.entryId) === String(bad?._id);
             banner.className = 'verification-banner tampered';
             banner.innerHTML = `
                 <div style="width:100%">
-                    <div style="display:flex; align-items:center; gap:0.85rem">
+                    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.75rem">
                         <div>
-                            <div class="banner-title" style="color:#b91c1c; font-size:16px; font-weight:600">
-                                Tampering Detected — Chain Broken at Block #${v.brokenAtIndex}
+                            <div class="banner-title" style="color:#b91c1c; font-size:16px; font-weight:600; display:flex; align-items:center; gap:0.5rem">
+                                <span class="alert-indicator danger"></span>
+                                Tampering Detected — Chain Broken at Block #${v.brokenAtIndex ?? 'Unknown'}
+                                ${isSimulated ? '<span style="font-size:11px; background:#fee2e2; color:#b91c1c; padding:2px 8px; border-radius:12px; font-weight:700">TEST MODIFICATION</span>' : ''}
                             </div>
-                            <div class="banner-desc" style="color:#64748b; font-size:14px; margin-top:2px">${this.esc(v.reason)}</div>
+                            <div class="banner-desc" style="color:#64748b; font-size:14px; margin-top:2px">
+                                ${this.esc(v.reason || 'Cryptographic mismatch detected')} (${totalEntries} entries checked)
+                            </div>
                         </div>
+                        ${(Auth.currentUser?.role === 'admin' && this.demoStatus?.enabled) ? `
+                            <button class="btn btn-emerald btn-sm" data-act="openRestoreModal">
+                                Restore Original Entry
+                            </button>
+                        ` : ''}
                     </div>
                     <div class="corrupted-alert-panel">
                         <div class="corrupted-grid">
-                            <div>
-                                <span style="color:var(--text-secondary); font-size:12px">Block:</span><br>
-                                <strong style="color:var(--text-primary); font-size:14px">#${v.brokenAtIndex} (${this.esc(bad?.action || 'unknown')})</strong>
+                            <div class="corrupted-item">
+                                <div class="corrupted-label">Broken Block</div>
+                                <div class="corrupted-value">#${v.brokenAtIndex ?? '—'} (${this.esc(bad?.action || 'Unknown')})</div>
                             </div>
-                            <div>
-                                <span style="color:var(--text-secondary); font-size:12px">Stored hash:</span><br>
-                                <span class="hash-pill" style="color:#b91c1c; background:#ffffff; border-color:#fca5a5">${this.esc(bad?.hash || '')}</span>
+                            <div class="corrupted-item">
+                                <div class="corrupted-label">Stored Hash</div>
+                                <div class="corrupted-value hash-value-container">
+                                    <span class="hash-pill hash-pill-danger" title="${this.esc(bad?.hash || '')}">${this.esc(bad?.hash || '')}</span>
+                                    <button type="button" class="hash-copy-btn" title="Copy stored hash" aria-label="Copy stored hash" onclick="navigator.clipboard.writeText('${this.esc(bad?.hash || '')}').then(() => App.showToast('Stored hash copied to clipboard', 'info'))">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="corrupted-item">
+                                <div class="corrupted-label">Integrity Verdict</div>
+                                <div class="corrupted-value" style="color:#b91c1c">HMAC / Hash Mismatch (Modified Record)</div>
                             </div>
                         </div>
                     </div>
@@ -688,6 +916,7 @@ const App = {
 
         tableBody.innerHTML = logs.map(l => {
             const isCorrupted = (l.index === corruptedIdx);
+            const isSimulated = l.isSimulatedTamper || (l.details && l.details._simulatedTamper);
             const actor = this.actorInfo(l);
             const paper = this.paperInfo(l);
 
@@ -698,19 +927,24 @@ const App = {
 
             return `
                 <tr class="${isCorrupted ? 'corrupted-row' : ''}">
-                    <td><strong style="color:${isCorrupted ? '#b91c1c' : 'var(--text-primary)'}">#${l.index}</strong></td>
-                    <td style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-secondary)">${this.esc(new Date(l.timestamp).toLocaleString())}</td>
-                    <td>
-                        <div style="font-weight:600; color:var(--text-primary)">${this.esc(actor.name)}</div>
-                        <div style="font-size:0.72rem; color:var(--text-muted)">${this.esc(actor.email)}</div>
+                    <td class="col-seq"><strong style="color:${isCorrupted ? '#b91c1c' : 'var(--text-primary)'}">#${l.index}</strong></td>
+                    <td class="col-time" style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-secondary)">${this.esc(new Date(l.timestamp).toLocaleString())}</td>
+                    <td class="col-user">
+                        <div class="audit-user-name" title="${this.esc(actor.name)}">${this.esc(actor.name)}</div>
+                        <div class="audit-user-email" title="${this.esc(actor.email)}">${this.esc(actor.email)}</div>
                     </td>
-                    <td>${actor.role ? `<span class="role-tag ${this.esc(actor.role)}">${this.esc(actor.role)}</span>` : ''}</td>
-                    <td><span class="action-tag ${actionClass}">${this.esc(l.action)}</span></td>
-                    <td><div style="font-weight:500">${this.esc(paper.title)}</div></td>
-                    <td>${isCorrupted
+                    <td class="col-role">${actor.role ? `<span class="role-tag ${this.esc(actor.role)}">${this.esc(actor.role)}</span>` : ''}</td>
+                    <td class="col-action">
+                        <div class="audit-action-wrap">
+                            <span class="action-tag ${actionClass}">${this.esc(l.action)}</span>
+                            ${isSimulated ? '<span class="status-badge" style="background:#fee2e2; color:#b91c1c; border-color:#fca5a5; font-size:0.65rem">SIMULATED</span>' : ''}
+                        </div>
+                    </td>
+                    <td class="col-paper"><div class="audit-paper-title" title="${this.esc(paper.title)}">${this.esc(paper.title)}</div></td>
+                    <td class="col-status">${isCorrupted
                         ? '<span class="status-badge rejected" style="font-size:0.7rem">Tampered</span>'
                         : '<span class="status-badge ready" style="font-size:0.7rem">Valid</span>'}</td>
-                    <td><button class="btn btn-outline btn-sm" data-act="openProofModal" data-arg="${l.index}">Proof</button></td>
+                    <td class="col-proof"><button class="btn btn-outline btn-sm" data-act="openProofModal" data-arg="${l.index}">Proof</button></td>
                 </tr>`;
         }).join('');
     },
@@ -750,11 +984,11 @@ const App = {
                     </div>
                     <div>
                         <span style="color:var(--text-secondary)">Previous entry hash (link):</span><br>
-                        <span class="hash-pill" style="word-break:break-all; display:block; margin-top:0.25rem">${this.esc(log.prevHash)}</span>
+                        <span class="hash-pill hash-pill-wrap" style="display:block; margin-top:0.25rem">${this.esc(log.prevHash)}</span>
                     </div>
                     <div>
                         <span style="color:var(--text-secondary)">This entry's sealed hash:</span><br>
-                        <span class="hash-pill" style="word-break:break-all; display:block; margin-top:0.25rem; color:#15803d; border-color:#86efac; background:#f0fdf4">${this.esc(log.hash)}</span>
+                        <span class="hash-pill hash-pill-wrap" style="display:block; margin-top:0.25rem; color:#15803d; border-color:#86efac; background:#f0fdf4">${this.esc(log.hash)}</span>
                     </div>
                     <div style="background:#f8fafc; padding:0.75rem 1rem; border-radius:var(--radius-md); border:1px solid var(--border-subtle)">
                         <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem"><span style="color:var(--text-secondary)">Action:</span><strong>${this.esc(log.action)}</strong></div>

@@ -599,8 +599,10 @@ body {
 
 .view-header-title-group {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 1.25rem;
+  flex: 1 1 360px;
+  min-width: 0;
 }
 
 .view-header-badge {
@@ -615,6 +617,7 @@ body {
   justify-content: center;
   flex-shrink: 0;
   box-shadow: 0 2px 8px rgba(37, 99, 235, 0.12);
+  margin-top: 3px;
 }
 
 .view-header-badge.amber { background: #fffbeb; color: #d97706; border-color: #fef3c7; box-shadow: 0 2px 8px rgba(217, 119, 6, 0.12); }
@@ -657,11 +660,13 @@ body {
   font-weight: 600;
   padding: 0.65rem 1.25rem;
   border-radius: var(--radius-sm);
-  border: none;
+  border: 1px solid transparent;
   cursor: pointer;
   transition: all var(--transition-fast);
   text-decoration: none;
   white-space: nowrap;
+  box-sizing: border-box;
+  line-height: 1.25;
 }
 
 .btn:active {
@@ -772,7 +777,7 @@ body {
 /* Monospace Hash Pills */
 .hash-pill {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 12.5px;
   padding: 0.25rem 0.6rem;
   border-radius: var(--radius-sm);
   background: #f8fafc;
@@ -780,6 +785,18 @@ body {
   color: #1e40af;
   letter-spacing: 0.02em;
   display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+  box-sizing: border-box;
+}
+
+.hash-pill.hash-pill-wrap {
+  white-space: normal;
+  word-break: break-all;
+  overflow: visible;
 }
 
 /* Modals */
